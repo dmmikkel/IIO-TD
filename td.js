@@ -5,7 +5,9 @@ var TOWER_SHOOTER = {
 	"bullet" : {
 		"slows" : false,
 		"damage" : 10,
-		"speed" : 5,
+		"speed" : 5
+
+		,
 		"splash" : false,
 		"splashRange" : 0
 	}
@@ -16,6 +18,8 @@ TowerDefence = function(io){
 	var STATE_PLACING_TOWER = 1;
 
 	var state = STATE_NONE;
+
+	var lastTick = (new Date()).getTime();
 
 	var towerIndicator = new iio.Circle(-100, -100, 16);
 	towerIndicator.setFillStyle('rgba(255,255,255,0.5)');
@@ -100,6 +104,7 @@ TowerDefence = function(io){
 				var towerType = TOWER_SHOOTER;
 				tower.setFillStyle('green');
 
+				// Set tower parameters
 				tower.attackInterval = towerType.attackInterval;
 				tower.bullet = {};
 				tower.bullet.damage = towerType.bullet.damage;
@@ -127,4 +132,4 @@ TowerDefence = function(io){
 	});
 };
 
-iio.start(TowerDefence);
+iio.start(TowerDefence, 'td');
