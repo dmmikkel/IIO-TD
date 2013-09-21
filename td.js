@@ -14,14 +14,18 @@ TowerDefence = function(io){
 	grid.setStrokeStyle('red', 1);
 	io.addObj(grid);
 
-	// ENEMIES
-	var enemy = new iio.Circle(io.canvas.center.x, 0, 5);
-	enemy.setFillStyle('blue');
-	enemy.enableKinematics();
-	enemy.setVel(0,2);
-	enemy.setBound('bottom',io.canvas.height+80);
-	enemy.health = 100;
-	io.addToGroup('enemies', enemy, 2);
+	// COLLISION
+	io.setCollisionCallback('bullets', 'enemies', function(bullet, enemy){
+		// Only hit enemies we targeted
+		if (bullet.targetEnemy == enemy) {
+			io.rmvObj(bullet);
+			enemy.health -= bullet.damage;
+			if (enemy.health <= 0) {
+				// Enemy is dead
+				io.rmvObj(enemy);
+			}
+		}
+	});
 
 	io.setFramerate(60, function(){
 		var towers = io.getGroup('towers');
@@ -50,10 +54,25 @@ TowerDefence = function(io){
 		}
 
 		for (var i = 0; i < bullets.length; i++) {
+			if (bullets[i].targetEnemy.health <= 0) {
+				io.rmvObj(bullets[i]);
+			}
 			var vector = bullets[i].targetEnemy.pos.clone().sub(bullets[i].pos);
 			bullets[i].setVel(vector.normalize().mult(bullets[i].speed));
 		};
 	});
+
+	// ENEMIES
+	io.setFramerate(1, function(){
+		var enemy = new iio.Circle(io.canvas.center.x, 0, 5);
+		enemy.setFillStyle('blue');
+		enemy.enableKinematics();
+		enemy.setVel(0,2);
+		enemy.setBound('bottom',io.canvas.height+80);
+		enemy.health = 100;
+		io.addToGroup('enemies', enemy, 2);
+	});
+	
 
 	io.canvas.addEventListener('mousedown', function(event){
 		switch (state) {
