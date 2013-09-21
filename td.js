@@ -1,5 +1,6 @@
 var TOWER_SHOOTER = {
 	"name" : "Shooter",
+    "size" : 16,
 	"attackInterval" : 300,
 	"range" : 100,
 	"bullet" : {
@@ -26,6 +27,7 @@ function Projectile(pos, damage, speed, targetEnemy) {
 Projectile.prototype = new iio.Circle();
 Projectile.prototype.constructor = Projectile;
 
+
 function Enemy(health, size) {
     iio.Circle.apply(this, [200, 0, size]);
     this.setFillStyle('blue');
@@ -35,6 +37,22 @@ function Enemy(health, size) {
 }
 Enemy.prototype = new iio.Circle();
 Enemy.prototype.constructor = Enemy;
+
+
+function Tower(pos, config) {
+    iio.Circle.apply(this, [pos, 16]);
+    this.setFillStyle('green');
+    this.attackInterval = config.attackInterval;
+    this.bullet = {};
+    this.bullet.damage = config.bullet.damage;
+    this.bullet.speed = config.bullet.speed;
+    this.range = config.range;
+    this.lastShot = 0;
+}
+Tower.prototype = new iio.Circle();
+Tower.prototype.constructor = Tower;
+
+
 
 TowerDefence = function(io){
 	var STATE_NONE = 0;
@@ -111,16 +129,7 @@ TowerDefence = function(io){
 			case STATE_PLACING_TOWER:
 				var cell = grid.getCellAt(io.getEventPosition(event));
 				var cellCenter = grid.getCellCenter(cell);
-				var tower = new iio.Circle(cellCenter, 16);
-				var towerType = TOWER_SHOOTER;
-				tower.setFillStyle('green');
-
-				tower.attackInterval = towerType.attackInterval;
-				tower.bullet = {};
-				tower.bullet.damage = towerType.bullet.damage;
-				tower.bullet.speed = towerType.bullet.speed;
-				tower.range = towerType.range;
-				tower.lastShot = 0;
+				var tower = new Tower(cellCenter, TOWER_SHOOTER);
 				io.addToGroup('towers', tower, 1);
 				break;
 		}
