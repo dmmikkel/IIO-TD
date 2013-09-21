@@ -11,6 +11,22 @@ var TOWER_SHOOTER = {
 	}
 };
 
+function Projectile(pos, damage, speed, targetEnemy) {
+    iio.Circle.apply(this, [pos, 2])
+    this.enableKinematics();
+    this.setFillStyle('black');
+    this.damage = damage;
+    this.speed = speed;
+    this.targetEnemy = targetEnemy;
+    
+    var vector = targetEnemy.pos.clone().sub(pos);
+    this.setVel(vector.normalize().mult(speed));
+    
+}
+Projectile.prototype = new iio.Circle();
+Projectile.prototype.constructor = Projectile;
+
+
 TowerDefence = function(io){
 	var STATE_NONE = 0;
 	var STATE_PLACING_TOWER = 1;
@@ -54,14 +70,8 @@ TowerDefence = function(io){
 					// Enemy within range
 					var date = new Date();
 					if (date.getTime() - towers[i].lastShot > towers[i].attackInterval) {
-						var bullet = new iio.Circle(towers[i].pos, 2);
-						bullet.setFillStyle('black');
-						bullet.enableKinematics();
-						bullet.damage = towers[i].bullet.damage;
-						bullet.speed = towers[i].bullet.speed;;
-						bullet.targetEnemy = enemies[e];
-						var vector = enemies[e].pos.clone().sub(bullet.pos);
-						bullet.setVel(vector.normalize().mult(bullet.speed));
+						var bullet = new Projectile(towers[i].pos, towers[i].bullet.damage, towers[i].bullet.speed, enemies[e]);
+						
 						towers[i].lastShot = date.getTime();
 						io.addToGroup('bullets', bullet, 3);
 					}
