@@ -133,21 +133,7 @@ TowerDefence = function(io){
 			case STATE_PLACING_TOWER:
 				var cell = grid.getCellAt(io.getEventPosition(event));
 				var cellCenter = grid.getCellCenter(cell);
-<<<<<<< HEAD
-				var tower = new iio.Circle(cellCenter, 16);
-				var towerType = TOWER_SHOOTER;
-				tower.setFillStyle('green');
-
-				// Set tower parameters
-				tower.attackInterval = towerType.attackInterval;
-				tower.bullet = {};
-				tower.bullet.damage = towerType.bullet.damage;
-				tower.bullet.speed = towerType.bullet.speed;
-				tower.range = towerType.range;
-				tower.lastShot = 0;
-=======
 				var tower = new Tower(cellCenter, TOWER_SHOOTER);
->>>>>>> 898c9cf0a53c2e3e25410a3fdb541cbc90ed0478
 				io.addToGroup('towers', tower, 1);
 				break;
 		}
