@@ -26,6 +26,15 @@ function Projectile(pos, damage, speed, targetEnemy) {
 Projectile.prototype = new iio.Circle();
 Projectile.prototype.constructor = Projectile;
 
+function Enemy(health, size) {
+    iio.Circle.apply(this, [200, 0, size]);
+    this.setFillStyle('blue');
+    this.enableKinematics();
+    this.setVel(0,0.5);
+    this.health = health;
+}
+Enemy.prototype = new iio.Circle();
+Enemy.prototype.constructor = Enemy;
 
 TowerDefence = function(io){
 	var STATE_NONE = 0;
@@ -91,12 +100,8 @@ TowerDefence = function(io){
 
 	// ENEMIES
 	io.setFramerate(1, function(){
-		var enemy = new iio.Circle(200, 0, 5);
-		enemy.setFillStyle('blue');
-		enemy.enableKinematics();
-		enemy.setVel(0,0.5);
-		enemy.setBound('bottom',io.canvas.height+80);
-		enemy.health = 100;
+		var enemy = new Enemy(100, 5);
+        enemy.setBound('bottom',io.canvas.height+80);
 		io.addToGroup('enemies', enemy, 2);
 	});
 	
