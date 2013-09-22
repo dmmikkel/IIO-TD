@@ -1,60 +1,30 @@
-var TOWER_SHOOTER = {
-	"name" : "Shooter",
-    "size" : 16,
-	"attackInterval" : 300,
-	"range" : 100,
-	"bullet" : {
-		"slows" : false,
-		"damage" : 10,
-		"speed" : 5
-
-		,
-		"splash" : false,
-		"splashRange" : 0
-	}
+var config = {
+    "level" : [
+        {
+            "startingGold" : 10
+        }
+    ],
+    "turrets" : {
+        "shooter" :  {
+            "name" : "Shooter",
+            "size" : 16,
+            "attackInterval" : 300,
+            "range" : 100,
+            "price" : 10,
+            "bullet" : {
+                "slows" : false,
+                "damage" : 10,
+                "speed" : 5,
+                "splash" : false,
+                "splashRange" : 0
+            }
+        }
+    }
 };
 
-function Projectile(pos, damage, speed, targetEnemy) {
-    iio.Circle.apply(this, [pos, 2])
-    this.enableKinematics();
-    this.setFillStyle('black');
-    this.damage = damage;
-    this.speed = speed;
-    this.targetEnemy = targetEnemy;
-    
-    var vector = targetEnemy.pos.clone().sub(pos);
-    this.setVel(vector.normalize().mult(speed));
-    
+function getLevel() {
+    return 0;
 }
-Projectile.prototype = new iio.Circle();
-Projectile.prototype.constructor = Projectile;
-
-
-function Enemy(health, size) {
-    iio.Circle.apply(this, [200, 0, size]);
-    this.setFillStyle('blue');
-    this.enableKinematics();
-    this.setVel(0,0.5);
-    this.health = health;
-}
-Enemy.prototype = new iio.Circle();
-Enemy.prototype.constructor = Enemy;
-
-
-function Tower(pos, config) {
-    iio.Circle.apply(this, [pos, 16]);
-    this.setFillStyle('green');
-    this.attackInterval = config.attackInterval;
-    this.bullet = {};
-    this.bullet.damage = config.bullet.damage;
-    this.bullet.speed = config.bullet.speed;
-    this.range = config.range;
-    this.lastShot = 0;
-}
-Tower.prototype = new iio.Circle();
-Tower.prototype.constructor = Tower;
-
-
 
 TowerDefence = function(io){
 	var STATE_NONE = 0;
@@ -81,13 +51,34 @@ TowerDefence = function(io){
 		// Only hit enemies we targeted
 		if (bullet.targetEnemy == enemy) {
 			io.rmvObj(bullet);
-			enemy.health -= bullet.damage;
-			if (enemy.health <= 0) {
+			enemy.setHealth(enemy.getHealth() - bullet.damage);
+			if (enemy.getHealth() <= 0) {
 				// Enemy is dead
 				io.rmvObj(enemy);
+                updateGold(enemy.value);
 			}
 		}
 	});
+    
+    //SCORE
+    var gold = config.level[getLevel()].startingGold;
+    var text = io.addToGroup('GUI', new iio.Text('',40,io.canvas.height-30)
+          .setFont('16px sans-serif')
+          .setFillStyle('white'));
+    function updateGold(amount){
+        gold += amount;
+        text.setText('Gold: '+gold)
+    }; updateGold(0);
+    
+    function purchaseTower(location, towerName) {
+        var towerConfig = config.turrets[towerName];
+        console.log("purchasing tower");
+        if (gold >= towerConfig.price) {
+            updateGold(-towerConfig.price);
+            new Tower(location, towerConfig);
+        }
+    }
+
 
 	io.setFramerate(60, function(){
 		var towers = io.getGroup('towers');
@@ -104,14 +95,13 @@ TowerDefence = function(io){
 						var bullet = new Projectile(towers[i].pos, towers[i].bullet.damage, towers[i].bullet.speed, enemies[e]);
 						
 						towers[i].lastShot = date.getTime();
-						io.addToGroup('bullets', bullet, 3);
 					}
 				}
 			}
 		}
 
 		for (var i = 0; i < bullets.length; i++) {
-			if (bullets[i].targetEnemy.health <= 0) {
+			if (bullets[i].targetEnemy.getHealth() <= 0) {
 				io.rmvObj(bullets[i]);
 			} else {
 				var vector = bullets[i].targetEnemy.pos.clone().sub(bullets[i].pos);
@@ -124,7 +114,6 @@ TowerDefence = function(io){
 	io.setFramerate(1, function(){
 		var enemy = new Enemy(100, 5);
         enemy.setBound('bottom',io.canvas.height+80);
-		io.addToGroup('enemies', enemy, 2);
 	});
 	
 	// MOUSE EVENTS
@@ -133,8 +122,8 @@ TowerDefence = function(io){
 			case STATE_PLACING_TOWER:
 				var cell = grid.getCellAt(io.getEventPosition(event));
 				var cellCenter = grid.getCellCenter(cell);
-				var tower = new Tower(cellCenter, TOWER_SHOOTER);
-				io.addToGroup('towers', tower, 1);
+				purchaseTower(cellCenter, 'shooter');
+				
 				break;
 		}
 	});
@@ -153,6 +142,61 @@ TowerDefence = function(io){
 			state = STATE_PLACING_TOWER;
 		}
 	});
+    
+    function Projectile(pos, damage, speed, targetEnemy) {
+        iio.Circle.apply(this, [pos, 2])
+        this.enableKinematics();
+        this.setFillStyle('black');
+        this.damage = damage;
+        this.speed = speed;
+        this.targetEnemy = targetEnemy;
+        io.addToGroup('bullets', this, 3);
+        
+        var vector = targetEnemy.pos.clone().sub(pos);
+        this.setVel(vector.normalize().mult(speed));
+        
+    }
+    Projectile.prototype = new iio.Circle();
+    Projectile.prototype.constructor = Projectile;
+    
+    
+    function Enemy(hp, size) {
+        iio.Circle.apply(this, [200, 0, size]);
+        this.setFillStyle('rgb(255, 140, 0)');
+        this.setStrokeStyle('rgba(0,0,0,0.4)');
+        this.setLineWidth(1);
+        this.enableKinematics();
+        this.setVel(0,0.5);
+        this.value = 5;
+        io.addToGroup('enemies', this, 2);
+        
+        var health = hp;
+        
+        this.getHealth = function() {
+            return health;
+        }
+        this.setHealth = function(amount) {
+            health = amount;
+            this.setFillStyle("rgba(255, 140, 0, " + amount/100 + ")");
+        }
+    }
+    Enemy.prototype = new iio.Circle();
+    Enemy.prototype.constructor = Enemy;
+    
+    
+    function Tower(pos, config) {
+        iio.Circle.apply(this, [pos, 16]);
+        this.setFillStyle('green');
+        this.attackInterval = config.attackInterval;
+        this.bullet = {};
+        this.bullet.damage = config.bullet.damage;
+        this.bullet.speed = config.bullet.speed;
+        this.range = config.range;
+        this.lastShot = 0;
+        io.addToGroup('towers', this, 1);
+    }
+    Tower.prototype = new iio.Circle();
+    Tower.prototype.constructor = Tower;
 };
 
-iio.start(TowerDefence, 'td');
+iio.start(TowerDefence);
