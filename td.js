@@ -37,6 +37,10 @@ TowerDefence = function(io){
 	var towerIndicator = new iio.Circle(-100, -100, 16);
 	towerIndicator.setFillStyle('rgba(255,255,255,0.5)');
 	io.addObj(towerIndicator);
+    
+    var towerRangeIndicator = new iio.Circle(-100, -100, 100);
+    towerRangeIndicator.setFillStyle('rgba(255,255,255,0.3)');
+    io.addObj(towerRangeIndicator);
 
 	io.addGroup('towers');
 	io.addGroup('enemies');
@@ -133,14 +137,20 @@ TowerDefence = function(io){
 		if (state == STATE_PLACING_TOWER) {
 			var cell = grid.getCellAt(io.getEventPosition(event));
 			towerIndicator.setPos(grid.getCellCenter(cell));
-		}
+            towerRangeIndicator.setPos(grid.getCellCenter(cell));
+		} else {
+            towerIndicator.setPos(-100,-100);
+            towerRangeIndicator.setPos(-100,-100);
+        }
 	});
 
 	window.addEventListener('keydown', function(event){
 		// T is pressed
 		if (iio.keyCodeIs('t', event)) {
 			state = STATE_PLACING_TOWER;
-		}
+		} if (iio.keyCodeIs('escape', event)) {
+            state = null;
+        }
 	});
     
     function Projectile(pos, damage, speed, targetEnemy) {
