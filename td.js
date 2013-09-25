@@ -92,12 +92,15 @@ TowerDefence = function(io){
         text.setText('Gold: '+gold)
     }; updateGold(0);
     
-    function purchaseTower(location, towerName) {
+    function purchaseTower(cell, towerName) {
         var towerConfig = config.turrets[towerName];
-        console.log("purchasing tower");
-        if (gold >= towerConfig.price) {
-            updateGold(-towerConfig.price);
-            new Tower(location, towerConfig);
+        var cellCenter = grid.getCellCenter(cell);
+        if (!cell.occupied) {
+            if (gold >= towerConfig.price) {
+                cell.occupied = true;
+                updateGold(-towerConfig.price);
+                new Tower(location, towerConfig);
+            }
         }
     }
 
@@ -142,10 +145,8 @@ TowerDefence = function(io){
 	io.canvas.addEventListener('mousedown', function(event){
 		switch (state) {
 			case STATE_PLACING_TOWER:
-				var cell = grid.getCellAt(io.getEventPosition(event));
-				var cellCenter = grid.getCellCenter(cell);
-				purchaseTower(cellCenter, turretType);
-				
+				purchaseTower(grid.getCellAt(io.getEventPosition(event)), turretType);
+                              
 				break;
 		}
 	});
